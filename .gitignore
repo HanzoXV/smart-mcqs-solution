@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local config
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.hprof
+
+# Keystore
+*.jks
+*.keystore
+
+# Google Services (if using Firebase)
+google-services.json
+
+# KSP generated
+app/build/generated/
