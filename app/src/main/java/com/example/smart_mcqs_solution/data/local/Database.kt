@@ -6,11 +6,13 @@ import androidx.room.TypeConverters
 import com.example.smart_mcqs_solution.data.dao.QuestionDao
 import com.example.smart_mcqs_solution.data.dao.QuizDao
 import com.example.smart_mcqs_solution.data.model.Question
+import com.example.smart_mcqs_solution.data.model.QuestionsInQuiz
 import com.example.smart_mcqs_solution.data.model.Quiz
 
 @Database(
     entities = [Question::class,
-        Quiz::class],
+        Quiz::class,
+        QuestionsInQuiz::class],
     version = 1,
     exportSchema = false
 )
