@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.smart_mcqs_solution.data.model.Question
-import com.example.smart_mcqs_solution.data.model.QuestionsInQuiz
 
 @Dao
 interface QuestionDao {

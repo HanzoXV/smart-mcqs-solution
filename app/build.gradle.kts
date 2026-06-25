@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.smart_mcqs_app"
+    namespace = "com.example.smart_mcqs_solution"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.smart_mcqs_app"
+        applicationId = "com.example.smart_mcqs_solution"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
