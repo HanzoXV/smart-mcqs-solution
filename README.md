@@ -4,7 +4,11 @@ This is a simple app that allows you to choose the correct answers to fun quiz q
 
 ---
 
+
+
 ## Overview of the Dashboard
+
+<img src="https://i.ibb.co/DfZMxpmR/Dashboard.jpg" alt="Dashboard Screenshot" width="250">
 
 The dashboard features 4 cards, displaying:
 * Total Score Accuracy
@@ -15,6 +19,8 @@ The dashboard features 4 cards, displaying:
 * Features a start quiz button that starts a quiz
 
 ---
+
+<img src="https://i.ibb.co/LdGJktyp/Quiz.jpg" alt="Dashboard Screenshot" width="250">
 
 ## Implemented Features
 
