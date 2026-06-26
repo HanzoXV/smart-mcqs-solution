@@ -51,72 +51,80 @@ class QuizViewModel(
             correctCount = 0
             wrongCount = 0
 
-            val allQuestions = questionRepository.fetchQuestions()
-            questions = allQuestions.take(10)
+            questions = questionRepository.fetchQuestions().take(10)
             isLoading = false
         }
     }
 
     fun selectAnswer(questionId: Int, option: String) {
         if (isSubmitted) return
-
         selectedAnswers = selectedAnswers + (questionId to option)
     }
 
     fun submitQuiz() {
-        if (isSubmitted)
-            return
+        if (isSubmitted) return
 
-        var tempCorrect = 0
-        var tempWrong = 0
+        val correctIds = questions
+            .filter { selectedAnswers[it.questionId] == it.correctAnswer }
+            .map { it.questionId }
 
-        val wrongQuestionIds = questions.filter { selectedAnswers[it.questionId] != it.correctAnswer }.map { it.questionId }
-        val correctIds = questions.filter { selectedAnswers[it.questionId] == it.correctAnswer }.map { it.questionId }
+        val wrongIds = questions
+            .filter { selectedAnswers[it.questionId] != it.correctAnswer }
+            .map { it.questionId }
+
+        val tempCorrect = correctIds.size
+        val tempWrong = wrongIds.size
+        val total = questions.size
+        val scorePercentage = if (total > 0) (tempCorrect.toFloat() / total) * 100f else 0f
+        val currentDate = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        val now = System.currentTimeMillis()
+        val oneDayMillis = 86_400_000L
+
+        correctCount = tempCorrect
+        wrongCount = tempWrong
+        isSubmitted = true
+        showResultDialog = true
 
         viewModelScope.launch {
-            correctIds.forEach {
-                questionRepository.incrementCorrectAttempts(it)
-            }
-            wrongQuestionIds.forEach { id ->
-                questionRepository.incrementWrongAttempts(id)
-            }
+            // Update attempt counts
+            correctIds.forEach { questionRepository.incrementCorrectAttempts(it) }
+            wrongIds.forEach { questionRepository.incrementWrongAttempts(it) }
 
             questions.forEach { question ->
-                val userAnswer = selectedAnswers[question.questionId]
-                if (userAnswer == question.correctAnswer) {
-                    tempCorrect++
+                val isCorrect = selectedAnswers[question.questionId] == question.correctAnswer
+
+                val newInterval: Int
+                val nextReviewDate: Long
+
+                if (isCorrect) {
+                    newInterval = (question.intervalDays * 2.5f).toInt().coerceAtLeast(1)
+                    nextReviewDate = now + newInterval * oneDayMillis
                 } else {
-                    tempWrong++
+                    newInterval = 1
+                    nextReviewDate = now + oneDayMillis
                 }
-            }
 
-            correctCount = tempCorrect
-            wrongCount = tempWrong
-
-            val total = questions.size
-            val scorePercentage = if (total > 0) (tempCorrect.toFloat() / total) * 100f else 0f
-            val currentDate =
-                SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-
-            isSubmitted = true
-            showResultDialog = true
-
-            viewModelScope.launch {
-                val newQuiz = Quiz(
-                    correctAnswers = tempCorrect,
-                    wrongAnswers = tempWrong,
-                    totalQuestions = total,
-                    averageScore = scorePercentage,
-                    dateSubmitted = currentDate
+                questionRepository.updateSpacedRepetition(
+                    id = question.questionId,
+                    intervalDays = newInterval,
+                    nextReviewDate = nextReviewDate
                 )
-
-                val generatedQuizId = quizRepository.insertQuiz(newQuiz).toInt()
-
-                val junctionEntries = questions.map { question ->
-                    QuestionsInQuiz(quizId = generatedQuizId, questionId = question.questionId)
-                }
-                quizRepository.insertQuizQuestions(junctionEntries)
             }
+
+            val newQuiz = Quiz(
+                correctAnswers = tempCorrect,
+                wrongAnswers = tempWrong,
+                totalQuestions = total,
+                averageScore = scorePercentage,
+                dateSubmitted = currentDate
+            )
+
+            val generatedQuizId = quizRepository.insertQuiz(newQuiz).toInt()
+
+            val junctionEntries = questions.map { question ->
+                QuestionsInQuiz(quizId = generatedQuizId, questionId = question.questionId)
+            }
+            quizRepository.insertQuizQuestions(junctionEntries)
         }
     }
 

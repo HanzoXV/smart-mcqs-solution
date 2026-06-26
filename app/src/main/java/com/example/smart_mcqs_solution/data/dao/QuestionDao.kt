@@ -9,7 +9,7 @@ import com.example.smart_mcqs_solution.data.model.Question
 @Dao
 interface QuestionDao {
 
-    @Query("SELECT * FROM question ORDER BY (wrongAttempts - correctAttempts) DESC, RANDOM()")
+    @Query("SELECT * FROM question ORDER BY nextReviewDate ASC, RANDOM() LIMIT 10")
     suspend fun fetchQuestions(): List<Question>
 
     @Query("UPDATE question SET wrongAttempts = wrongAttempts + 1 WHERE questionId = :id")
@@ -26,4 +26,7 @@ interface QuestionDao {
 
     @Query("SELECT COUNT(*) FROM question")
     suspend fun getQuestionCount(): Int
+
+    @Query("UPDATE question SET intervalDays = :intervalDays, nextReviewDate = :nextReviewDate WHERE questionId = :id")
+    suspend fun updateSpacedRepetition(id: Int, intervalDays: Int, nextReviewDate: Long)
 }

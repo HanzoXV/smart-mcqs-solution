@@ -11,5 +11,7 @@ data class Question(
     val options: List<String>,
     val correctAnswer: String,
     val wrongAttempts: Int = 0,
-    val correctAttempts: Int = 0
+    val correctAttempts: Int = 0,
+    val intervalDays: Int = 1,
+    val nextReviewDate: Long = 0L
 )

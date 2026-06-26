@@ -12,11 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.smart_mcqs_solution.data.model.Question
@@ -43,6 +44,9 @@ fun QuizScreen(
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "progress_animation"
     )
+
+    // Hoist all .copy(alpha) calls here — computed once per QuizScreen recomposition
+    val onSurfaceVariantDim = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -80,7 +84,7 @@ fun QuizScreen(
                 Text(
                     text = if (isSubmitted) "Analyze your results below" else "Select the correct answer for each statement",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = onSurfaceVariantDim
                     )
                 )
 
@@ -179,6 +183,10 @@ fun QuizScreen(
     }
 
     if (viewModel.showResultDialog) {
+        val scorePercentage = if (viewModel.questions.isNotEmpty())
+            (viewModel.correctCount * 100) / viewModel.questions.size
+        else 0
+
         AlertDialog(
             onDismissRequest = { viewModel.dismissDialog() },
             shape = RoundedCornerShape(24.dp),
@@ -193,21 +201,39 @@ fun QuizScreen(
             text = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
                 ) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("Correct breakdown:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("${viewModel.correctCount} right", color = CorrectGreen, fontWeight = FontWeight.Bold)
                     }
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("Incorrect breakdown:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("${viewModel.wrongCount} wrong", color = ErrorRed, fontWeight = FontWeight.Bold)
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 4.dp))
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("Final Score:", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            "${viewModel.correctCount * 10}%",
+                            "Final Score:",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            "$scorePercentage%",
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.primary
@@ -240,18 +266,32 @@ fun QuestionCard(
     isSubmitted: Boolean,
     onOptionSelected: (String) -> Unit
 ) {
+    // Hoist all .copy(alpha) calls — computed once per card, not per option per frame
+    val outlineVariantDim = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+    val primaryContainerDim = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val surfaceContainerLowest = MaterialTheme.colorScheme.surfaceContainerLowest
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+    // Card border computed once
+    val cardBorder = remember(outlineVariantDim) {
+        BorderStroke(1.dp, outlineVariantDim)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        border = cardBorder
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "QUESTION $questionNumber",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = primaryColor,
                     letterSpacing = 1.sp
                 ),
                 modifier = Modifier.padding(bottom = 6.dp)
@@ -261,84 +301,119 @@ fun QuestionCard(
                 text = question.questionText,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = onSurfaceColor,
                     lineHeight = 24.sp
                 ),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             question.options.forEachIndexed { index, option ->
-                val isSelected = option == selectedOption
-                val isCorrect = option == question.correctAnswer
-
-                val optionLetter = ('A' + index).toString()
-
-                val borderColor = when {
-                    isSubmitted && isCorrect -> CorrectGreen
-                    isSubmitted && isSelected && !isCorrect -> ErrorRed
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.outlineVariant
-                }
-
-                val bgColor = when {
-                    isSubmitted && isCorrect -> CorrectGreenSurface
-                    isSubmitted && isSelected && !isCorrect -> ErrorRedSurface
-                    isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    else -> MaterialTheme.colorScheme.surfaceContainerLowest
-                }
-
-                val contentTextColor = when {
-                    isSubmitted && isCorrect -> CorrectGreen
-                    isSubmitted && isSelected && !isCorrect -> ErrorRed
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable(enabled = !isSubmitted) { onOptionSelected(option) },
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(if (isSelected || (isSubmitted && isCorrect)) 2.dp else 1.dp, borderColor),
-                    color = bgColor
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .background(
-                                    color = if (isSelected) contentTextColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = optionLetter,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = option,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = if (isSelected || (isSubmitted && isCorrect)) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSubmitted && (isCorrect || isSelected)) contentTextColor else MaterialTheme.colorScheme.onSurface
-                            ),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
+                OptionRow(
+                    letter = ('A' + index).toString(),
+                    option = option,
+                    isSelected = option == selectedOption,
+                    isCorrect = option == question.correctAnswer,
+                    isSubmitted = isSubmitted,
+                    onSelected = { onOptionSelected(option) },
+                    outlineVariantDim = outlineVariantDim,
+                    primaryContainerDim = primaryContainerDim,
+                    surfaceColor = surfaceColor,
+                    onSurfaceVariantColor = onSurfaceVariantColor,
+                    surfaceContainerLowest = surfaceContainerLowest,
+                    primaryColor = primaryColor,
+                    onSurfaceColor = onSurfaceColor
+                )
             }
+        }
+    }
+}
+
+@Composable
+fun OptionRow(
+    letter: String,
+    option: String,
+    isSelected: Boolean,
+    isCorrect: Boolean,
+    isSubmitted: Boolean,
+    onSelected: () -> Unit,
+    outlineVariantDim: Color,
+    primaryContainerDim: Color,
+    surfaceColor: Color,
+    onSurfaceVariantColor: Color,
+    surfaceContainerLowest: Color,
+    primaryColor: Color,
+    onSurfaceColor: Color
+) {
+    val borderColor = when {
+        isSubmitted && isCorrect -> CorrectGreen
+        isSubmitted && isSelected && !isCorrect -> ErrorRed
+        isSelected -> primaryColor
+        else -> outlineVariantDim
+    }
+
+    val bgColor = when {
+        isSubmitted && isCorrect -> CorrectGreenSurface
+        isSubmitted && isSelected && !isCorrect -> ErrorRedSurface
+        isSelected -> primaryContainerDim
+        else -> surfaceContainerLowest
+    }
+
+    val contentTextColor = when {
+        isSubmitted && isCorrect -> CorrectGreen
+        isSubmitted && isSelected && !isCorrect -> ErrorRed
+        isSelected -> primaryColor
+        else -> onSurfaceColor
+    }
+
+    val borderStroke = remember(isSelected, isSubmitted, isCorrect, borderColor) {
+        BorderStroke(
+            width = if (isSelected || (isSubmitted && isCorrect)) 2.dp else 1.dp,
+            color = borderColor
+        )
+    }
+
+    val letterBgColor = if (isSelected) contentTextColor else outlineVariantDim
+    val letterTextColor = if (isSelected) surfaceColor else onSurfaceVariantColor
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(enabled = !isSubmitted) { onSelected() },
+        shape = RoundedCornerShape(14.dp),
+        border = borderStroke,
+        color = bgColor
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(color = letterBgColor, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = letter,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = letterTextColor
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = option,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (isSelected || (isSubmitted && isCorrect)) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSubmitted && (isCorrect || isSelected)) contentTextColor else onSurfaceColor
+                ),
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

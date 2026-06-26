@@ -13,8 +13,8 @@ class QuestionRepository(private val questionDao: QuestionDao) {
         questionDao.incrementWrongAttempts(id)
     }
 
-    suspend fun getQuestionByQuizId(id: Int): List<Int> {
-        return questionDao.getQuestionIdsByQuiz(id)
+    suspend fun updateSpacedRepetition(id: Int, intervalDays: Int, nextReviewDate: Long) {
+        questionDao.updateSpacedRepetition(id, intervalDays, nextReviewDate)
     }
 
     suspend fun insertQuestions(questions: List<Question>) {

@@ -82,17 +82,6 @@ fun DashboardScreen(
             }
 
             item {
-                Text(
-                    text = "Performance Trends",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-                )
-            }
-
-            item {
                 ScoreLineChart(scores = averageScores)
             }
 
