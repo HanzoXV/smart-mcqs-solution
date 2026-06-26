@@ -59,5 +59,4 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("co.yml:ycharts:2.1.0")
 }
