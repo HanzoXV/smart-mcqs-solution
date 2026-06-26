@@ -24,4 +24,8 @@ class QuestionRepository(private val questionDao: QuestionDao) {
     suspend fun getQuestionCount(): Int {
         return questionDao.getQuestionCount()
     }
+
+    suspend fun incrementCorrectAttempts(id: Int) {
+        questionDao.incrementCorrectAttempts(id)
+    }
 }

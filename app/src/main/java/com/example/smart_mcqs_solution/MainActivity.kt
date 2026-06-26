@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,7 @@ import com.example.smart_mcqs_solution.data.model.Question
 import com.example.smart_mcqs_solution.navigation.Screen
 import com.example.smart_mcqs_solution.repository.QuestionRepository
 import com.example.smart_mcqs_solution.repository.QuizRepository
+import com.example.smart_mcqs_solution.ui.SmartMcqsViewModelFactory
 import com.example.smart_mcqs_solution.ui.dashboard.DashboardScreen
 import com.example.smart_mcqs_solution.ui.dashboard.DashboardViewModel
 import com.example.smart_mcqs_solution.ui.quiz.QuizScreen
@@ -42,8 +44,9 @@ class MainActivity : ComponentActivity() {
         questionRepository = QuestionRepository(database.questionDao())
         quizRepository = QuizRepository(database.quizDao())
 
-        dashboardViewModel = DashboardViewModel(quizRepository)
-        quizViewModel = QuizViewModel(questionRepository, quizRepository)
+        val factory = SmartMcqsViewModelFactory(questionRepository, quizRepository)
+        dashboardViewModel = ViewModelProvider(this, factory)[DashboardViewModel::class.java]
+        quizViewModel = ViewModelProvider(this, factory)[QuizViewModel::class.java]
 
         lifecycleScope.launch(Dispatchers.IO) {
             if (questionRepository.getQuestionCount() == 0) {
@@ -56,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
+
             SmartMcqsSolutionTheme {
                 NavHost(
                     navController = navController,
@@ -88,7 +92,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 // HARD-CODING THESE JUST FOR THE TASK -> CAN BE MADE DYNAMIC LATER
 fun fetchQuestions(): List<Question> {
     return listOf(

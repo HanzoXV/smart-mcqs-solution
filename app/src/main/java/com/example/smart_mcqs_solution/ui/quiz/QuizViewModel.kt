@@ -64,16 +64,19 @@ class QuizViewModel(
     }
 
     fun submitQuiz() {
-        if (isSubmitted) return
+        if (isSubmitted)
+            return
 
         var tempCorrect = 0
         var tempWrong = 0
 
-        val wrongQuestionIds = questions
-            .filter { selectedAnswers[it.questionId] != it.correctAnswer }
-            .map { it.questionId }
+        val wrongQuestionIds = questions.filter { selectedAnswers[it.questionId] != it.correctAnswer }.map { it.questionId }
+        val correctIds = questions.filter { selectedAnswers[it.questionId] == it.correctAnswer }.map { it.questionId }
 
         viewModelScope.launch {
+            correctIds.forEach {
+                questionRepository.incrementCorrectAttempts(it)
+            }
             wrongQuestionIds.forEach { id ->
                 questionRepository.incrementWrongAttempts(id)
             }

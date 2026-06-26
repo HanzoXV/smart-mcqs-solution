@@ -48,21 +48,24 @@ val Typography = Typography(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Black900,
-    onPrimary = Cyan400,
-    primaryContainer = Black800,
-    onPrimaryContainer = Cyan300,
-    secondary = Cyan400,
-    onSecondary = Black900,
-    secondaryContainer = Cyan100,
-    onSecondaryContainer = Black900,
-    background = Grey200,
-    onBackground = Black900,
-    surface = White,
-    onSurface = Black900,
-    surfaceVariant = Grey200,
-    onSurfaceVariant = Grey400,
-    outline = Grey200
+    primary = Violet400,
+    onPrimary = SurfaceWhite,
+    primaryContainer = Violet100,
+    onPrimaryContainer = Indigo900,
+    secondary = Indigo700,
+    onSecondary = SurfaceWhite,
+    background = BackgroundGrey,
+    onBackground = TextPrimary,
+    surface = SurfaceWhite,
+    onSurface = TextPrimary,
+    surfaceVariant = BackgroundGrey,
+    onSurfaceVariant = TextSecondary,
+    outline = OutlineGrey,
+    error = ErrorRed,
+    onError = SurfaceWhite,
+    surfaceContainerLow = Color(0xFFF3F4F6),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceContainerHigh = Color(0xFFE5E7EB)
 )
 
 @Composable

@@ -9,11 +9,14 @@ import com.example.smart_mcqs_solution.data.model.Question
 @Dao
 interface QuestionDao {
 
-    @Query("SELECT * FROM question ORDER BY wrongAttempts DESC, RANDOM()")
+    @Query("SELECT * FROM question ORDER BY (wrongAttempts - correctAttempts) DESC, RANDOM()")
     suspend fun fetchQuestions(): List<Question>
 
     @Query("UPDATE question SET wrongAttempts = wrongAttempts + 1 WHERE questionId = :id")
     suspend fun incrementWrongAttempts(id: Int)
+
+    @Query("UPDATE question SET correctAttempts = correctAttempts + 1 WHERE questionId = :id")
+    suspend fun incrementCorrectAttempts(id: Int)
 
     @Query("SELECT questionId FROM questionsinquiz WHERE quizId = :quizId")
     suspend fun getQuestionIdsByQuiz(quizId: Int): List<Int>
