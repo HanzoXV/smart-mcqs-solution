@@ -1,5 +1,6 @@
 package com.example.smart_mcqs_solution.ui.quiz
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +33,16 @@ fun QuizScreen(
     val questions = viewModel.questions
     val selectedAnswers = viewModel.selectedAnswers
     val isSubmitted = viewModel.isSubmitted
+
+    val totalQuestions = questions.size
+    val answeredQuestions = selectedAnswers.size
+    val progressRatio = if (totalQuestions > 0) answeredQuestions.toFloat() / totalQuestions else 0f
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = progressRatio,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+        label = "progress_animation"
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,6 +68,7 @@ fun QuizScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
                     text = if (isSubmitted) "Review Assessment" else "Quiz",
                     style = MaterialTheme.typography.headlineMedium.copy(
@@ -63,13 +76,48 @@ fun QuizScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 )
+
                 Text(
                     text = if (isSubmitted) "Analyze your results below" else "Select the correct answer for each statement",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    ),
-                    modifier = Modifier.padding(bottom = 20.dp)
+                    )
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (!isSubmitted && totalQuestions > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Progress",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$answeredQuestions / $totalQuestions Answered",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -86,6 +134,7 @@ fun QuizScreen(
                         )
                     }
                 }
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.background
@@ -154,7 +203,7 @@ fun QuizScreen(
                         Text("Incorrect breakdown:", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("${viewModel.wrongCount} wrong", color = ErrorRed, fontWeight = FontWeight.Bold)
                     }
-                    Divider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 4.dp))
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Final Score:", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         Text(
