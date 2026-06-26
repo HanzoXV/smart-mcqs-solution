@@ -1,5 +1,6 @@
 package com.example.smart_mcqs_solution.ui.quiz
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -44,9 +45,11 @@ fun QuizScreen(
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "progress_animation"
     )
-
-    // Hoist all .copy(alpha) calls here — computed once per QuizScreen recomposition
     val onSurfaceVariantDim = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+
+    BackHandler(enabled = true) {
+        onCloseQuiz()
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -266,7 +269,6 @@ fun QuestionCard(
     isSubmitted: Boolean,
     onOptionSelected: (String) -> Unit
 ) {
-    // Hoist all .copy(alpha) calls — computed once per card, not per option per frame
     val outlineVariantDim = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
     val primaryContainerDim = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -275,7 +277,6 @@ fun QuestionCard(
     val primaryColor = MaterialTheme.colorScheme.primary
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
 
-    // Card border computed once
     val cardBorder = remember(outlineVariantDim) {
         BorderStroke(1.dp, outlineVariantDim)
     }
